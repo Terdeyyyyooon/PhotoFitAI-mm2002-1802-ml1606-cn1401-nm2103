@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+  <title>PhotoFit AI</title>
+  <link rel="manifest" href="manifest.json"/>
+  <meta name="theme-color" content="#0f0f1a"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <link rel="apple-touch-icon" href="icon-192.png"/>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet"/>
+
+  <style>
+    :root {
+      --bg: #0f0f1a;
+      --card: #1a1a2e;
+      --card2: #16213e;
+      --accent: #7c3aed;
+      --accent2: #a855f7;
+      --pink: #ec4899;
+      --green: #10b981;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --border: rgba(124,58,237,0.25);
+      --r: 14px;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100dvh;padding-bottom:72px}
+
+    /* HEADER */
+    header{
+      background:linear-gradient(135deg,#1a1a2e,#16213e);
+      padding:16px 18px;border-bottom:1px solid var(--border);
+      display:flex;align-items:center;gap:12px;
+      position:sticky;top:0;z-index:50;
+    }
+    .logo-box{
+      width:40px;height:40px;border-radius:10px;
+      background:linear-gradient(135deg,var(--accent),var(--pink));
+      display:flex;align-items:center;justify-content:center;font-size:20px;
+    }
+    header h1{font-size:1.2rem;font-weight:800;letter-spacing:-.02em}
+    header p{font-size:.72rem;color:var(--muted)}
+
+    /* PAGES */
+    .page{display:none}
+    .page.active{display:block}
+
+    /* CARDS */
+    .card{
+      margin:14px 14px 0;
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:var(--r);
+      padding:16px;
+    }
+    .card-title{
+      font-size:.72rem;font-weight:700;text-transform:uppercase;
+      letter-spacing:.1em;color:var(--muted);margin-bottom:12px;
+    }
+
+    /* INPUTS */
+    input[type=text],input[type=password],textarea,select{
+      width:100%;background:#0d0d1a;border:1px solid var(--border);
+      border-radius:10px;color:var(--text);padding:10px 13px;
+      font-family:'Outfit',sans-serif;font-size:.88rem;outline:none;
+    }
+    input:focus,textarea:focus,select:focus{border-color:var(--accent2)}
+    textarea{resize:vertical;min-height:70px}
+    select option{background:#1a1a2e}
+
+    /* PILL BUTTONS */
+    .pills{display:flex;flex-wrap:wrap;gap:7px}
+    .pill{
+      background:#0d0d1a;border:1.5px solid var(--border);
+      border-radius:20px;color:var(--muted);
+      padding:6px 13px;font-size:.8rem;font-family:'Outfit',sans-serif;
+      cursor:pointer;transition:all .18s;
+    }
+    .pill.active{border-color:var(--accent2);background:rgba(124,58,237,.18);color:var(--accent2)}
+    .pill:hover{border-color:var(--accent2)}
+
+    /* PHOTO SLOTS */
+    .photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+    .slot{
+      aspect-ratio:3/4;border-radius:10px;border:2px dashed var(--border);
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      cursor:pointer;position:relative;overflow:hidden;background:#0d0d1a;
+      transition:border-color .18s;
+    }
+    .slot:hover{border-color:var(--accent2)}
+    .slot img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
+    .slot .add{font-size:22px;opacity:.4}
+    .slot .lbl{font-size:.65rem;color:var(--muted);margin-top:4px}
+    .slot .del{
+      position:absolute;top:4px;right:4px;background:rgba(0,0,0,.75);
+      border:none;color:#fff;border-radius:50%;width:22px;height:22px;
+      font-size:13px;cursor:pointer;display:none;align-items:center;justify-content:center;z-index:2;
+    }
+    .slot.filled .del{display:flex}
+    .slot.filled .add,.slot.filled .lbl{display:none}
+
+    /* MANNEQUIN SELECTOR */
+    .mannequin-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+    .mq-btn{
+      background:#0d0d1a;border:2px solid var(--border);border-radius:12px;
+      color:var(--text);padding:12px 8px;cursor:pointer;text-align:center;
+      transition:all .18s;font-family:'Outfit',sans-serif;
+    }
+    .mq-btn .icon{font-size:26px;display:block;margin-bottom:5px}
+    .mq-btn .name{font-size:.8rem;font-weight:600}
+    .mq-btn .detail{font-size:.68rem;color:var(--muted);margin-top:2px}
+    .mq-btn.active{border-color:var(--accent2);background:rgba(124,58,237,.15)}
+
+    /* COLOR PILLS for mannequin */
+    .color-pill{
+      display:flex;align-items:center;gap:6px;
+      background:#0d0d1a;border:1.5px solid var(--border);
+      border-radius:20px;padding:5px 12px 5px 8px;
+      cursor:pointer;font-size:.78rem;transition:all .18s;
+    }
+    .color-pill .dot{width:14px;height:14px;border-radius:50%;flex-shrink:0;border:1px solid rgba(255,255,255,.2)}
+    .color-pill.active{border-color:var(--accent2);background:rgba(124,58,237,.18);color:var(--accent2)}
+
+    /* MAIN ACTION BTN */
+    .btn-main{
+      width:calc(100% - 28px);margin:14px;padding:15px;
+      background:linear-gradient(135deg,var(--accent),var(--accent2));
+      border:none;border-radius:var(--r);color:#fff;
+      font-family:'Outfit',sans-serif;font-size:1rem;font-weight:700;
+      cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;
+      transition:opacity .18s,transform .1s;
+    }
+    .btn-main:hover{opacity:.9}
+    .btn-main:active{transform:scale(.98)}
+    .btn-main:disabled{opacity:.45;cursor:not-allowed}
+
+    .btn-green{
+      width:calc(100% - 28px);margin:8px 14px;padding:14px;
+      background:var(--green);border:none;border-radius:var(--r);
+      color:#fff;font-family:'Outfit',sans-serif;font-size:.95rem;font-weight:700;
+      cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;
+    }
+
+    .btn-outline{
+      width:100%;padding:11px;margin-top:10px;
+      background:transparent;border:1.5px solid var(--accent);
+      border-radius:10px;color:var(--accent2);
+      font-family:'Outfit',sans-serif;font-size:.88rem;font-weight:600;
+      cursor:pointer;transition:background .18s;
+    }
+    .btn-outline:hover{background:rgba(124,58,237,.15)}
+
+    /* RESULT PHOTO */
+    .result-img-wrap{
+      width:100%;aspect-ratio:3/4;border-radius:10px;
+      overflow:hidden;background:#000;position:relative;
+    }
+    .result-img-wrap img{width:100%;height:100%;object-fit:cover}
+    .result-img-wrap .placeholder{
+      position:absolute;inset:0;display:flex;flex-direction:column;
+      align-items:center;justify-content:center;gap:10px;color:var(--muted);
+    }
+    .result-img-wrap .placeholder .icon{font-size:48px}
+
+    /* COPY ROW */
+    .copy-row{display:flex;gap:7px;align-items:flex-start}
+    .copy-row textarea{flex:1}
+    .copy-btn{
+      background:#0d0d1a;border:1px solid var(--border);border-radius:9px;
+      color:var(--accent2);padding:8px 10px;cursor:pointer;font-size:16px;flex-shrink:0;
+    }
+    .copy-btn.ok{color:var(--green);border-color:var(--green)}
+
+    /* FIELD LABEL */
+    .flabel{font-size:.7rem;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);margin-bottom:5px}
+
+    /* LOADING */
+    .loading-overlay{
+      display:none;position:fixed;inset:0;
+      background:rgba(15,15,26,.96);z-index:200;
+      flex-direction:column;align-items:center;justify-content:center;gap:18px;
+    }
+    .loading-overlay.show{display:flex}
+    .spinner{
+      width:72px;height:72px;border-radius:50%;
+      border:4px solid rgba(124,58,237,.2);border-top-color:var(--accent2);
+      animation:spin 1s linear infinite;
+    }
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .loading-title{font-size:1.1rem;font-weight:700}
+    .loading-sub{font-size:.82rem;color:var(--muted);text-align:center;padding:0 30px}
+
+    /* PROGRESS STEPS */
+    .steps{display:flex;flex-direction:column;gap:6px;width:80%;max-width:280px}
+    .step{
+      display:flex;align-items:center;gap:10px;
+      font-size:.8rem;color:var(--muted);padding:7px 10px;
+      border-radius:8px;transition:all .3s;
+    }
+    .step.active{background:rgba(124,58,237,.15);color:var(--accent2)}
+    .step.done{color:var(--green)}
+    .step .dot{width:8px;height:8px;border-radius:50%;background:currentColor;flex-shrink:0}
+
+    /* TOAST */
+    .toast{
+      position:fixed;bottom:82px;left:50%;transform:translateX(-50%);
+      background:var(--card);border:1px solid var(--border);
+      color:var(--text);padding:9px 18px;border-radius:20px;
+      font-size:.82rem;font-weight:600;opacity:0;transition:opacity .25s;
+      z-index:300;white-space:nowrap;pointer-events:none;
+    }
+    .toast.show{opacity:1}
+
+    /* BOTTOM NAV */
+    nav{
+      position:fixed;bottom:0;left:0;right:0;
+      background:var(--card);border-top:1px solid var(--border);
+      display:flex;padding:6px 0 8px;
+    }
+    nav button{
+      flex:1;background:none;border:none;color:var(--muted);
+      font-family:'Outfit',sans-serif;font-size:.62rem;font-weight:600;
+      padding:5px;cursor:pointer;display:flex;flex-direction:column;
+      align-items:center;gap:2px;transition:color .18s;
+    }
+    nav button .ni{font-size:20px}
+    nav button.active{color:var(--accent2)}
+
+    /* HISTORY */
+    .hist-list{display:flex;flex-direction:column;gap:10px}
+    .hist-item{
+      display:flex;gap:11px;align-items:flex-start;
+      background:var(--card);border:1px solid var(--border);
+      border-radius:var(--r);padding:12px;
+    }
+    .hist-item img{width:56px;height:72px;object-fit:cover;border-radius:7px;flex-shrink:0}
+    .hist-info{flex:1;min-width:0}
+    .hist-title{font-size:.83rem;font-weight:600;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .hist-meta{font-size:.7rem;color:var(--muted);margin-bottom:7px}
+    .hist-actions{display:flex;gap:6px}
+    .hist-btn{
+      background:#0d0d1a;border:1px solid var(--border);border-radius:7px;
+      color:var(--muted);font-size:.7rem;padding:4px 9px;cursor:pointer;
+    }
+    .hist-btn.danger{color:#f87171;border-color:rgba(248,113,113,.3)}
+
+    /* EMPTY */
+    .empty{text-align:center;padding:50px 20px;color:var(--muted)}
+    .empty .eicon{font-size:50px;margin-bottom:12px}
+
+    /* SETTINGS */
+    .settings-block{margin-bottom:14px}
+    .settings-block label{display:block;font-size:.75rem;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.08em}
+    .danger-btn{
+      width:100%;padding:11px;background:rgba(239,68,68,.1);
+      border:1px solid rgba(239,68,68,.3);border-radius:10px;
+      color:#f87171;font-family:'Outfit',sans-serif;font-size:.85rem;cursor:pointer;
+    }
+
+    /* STATUS BADGE */
+    .badge{
+      display:inline-flex;align-items:center;gap:5px;
+      padding:4px 10px;border-radius:20px;font-size:.7rem;font-weight:600;
+    }
+    .badge.free{background:rgba(16,185,129,.15);color:var(--green);border:1px solid rgba(16,185,129,.3)}
+
+    /* COUNTER */
+    .counter-row{
+      display:flex;align-items:center;justify-content:space-between;
+      margin-top:8px;padding:8px 12px;background:#0d0d1a;border-radius:9px;
+    }
+    .counter-row span{font-size:.78rem;color:var(--muted)}
+    .counter-row strong{font-size:.85rem;color:var(--accent2)}
+
+    /* DIVIDER */
+    .divider{height:1px;background:var(--border);margin:14px 0}
+
+    .row{display:flex;gap:8px;align-items:center}
+    .flex1{flex:1}
+    .icon-btn{
+      background:#0d0d1a;border:1px solid var(--border);border-radius:9px;
+      color:var(--text);padding:9px 12px;cursor:pointer;font-size:16px;
+      transition:background .18s;flex-shrink:0;
+    }
+    .icon-btn:hover{background:rgba(124,58,237,.15)}
+
+    /* STEP INDICATOR */
+    .step-indicator{
+      display:flex;gap:6px;padding:14px 14px 0;
+    }
+    .step-dot{
+      flex:1;height:3px;border-radius:2px;background:var(--border);transition:background .3s;
+    }
+    .step-dot.active{background:var(--accent2)}
+    .step-dot.done{background:var(--green)}
+  </style>
+</head>
+<body>
+
+<!-- ══════════════ PAGE CRÉER ══════════════ -->
+<div id="page-create" class="page active">
+  <header>
+    <div class="logo-box">👗</div>
+    <div>
+      <h1>PhotoFit AI</h1>
+      <p>Assistant Vinted personnel</p>
+    </div>
+    <span class="badge free" style="margin-left:auto">✓ Gratuit</span>
+  </header>
+
+  <!-- ÉTAPE 1 : PHOTOS -->
+  <div class="card">
+    <div class="card-title">📸 Étape 1 — Ta photo du vêtement</div>
+    <div class="photo-grid">
+      <div class="slot" id="s0" onclick="openSlot(0)">
+        <span class="add">➕</span><span class="lbl">Principale</span>
+        <button class="del" onclick="delSlot(event,0)">✕</button>
+      </div>
+      <div class="slot" id="s1" onclick="openSlot(1)">
+        <span class="add">➕</span><span class="lbl">Détail</span>
+        <button class="del" onclick="delSlot(event,1)">✕</button>
+      </div>
+      <div class="slot" id="s2" onclick="openSlot(2)">
+        <span class="add">➕</span><span class="lbl">Étiquette</span>
+        <button class="del" onclick="delSlot(event,2)">✕</button>
+      </div>
+    </div>
+    <input type="file" id="fileIn" accept="image/*" style="display:none" onchange="handleFile(event)"/>
+    <p style="font-size:.7rem;color:var(--muted);margin-top:8px">📌 Photo à plat, bien éclairée, fond uni — meilleurs résultats !</p>
+  </div>
+
+  <!-- ÉTAPE 2 : MANNEQUIN -->
+  <div class="card">
+    <div class="card-title">🗿 Étape 2 — Choix du mannequin</div>
+    <div class="mannequin-grid" id="mqGrid">
+      <button class="mq-btn active" data-mq="femme" onclick="selMq(this)">
+        <span class="icon">👩</span>
+        <span class="name">Femme</span>
+        <span class="detail">Adulte féminin</span>
+      </button>
+      <button class="mq-btn" data-mq="homme" onclick="selMq(this)">
+        <span class="icon">👨</span>
+        <span class="name">Homme</span>
+        <span class="detail">Adulte masculin</span>
+      </button>
+      <button class="mq-btn" data-mq="fille" onclick="selMq(this)">
+        <span class="icon">👧</span>
+        <span class="name">Petite fille</span>
+        <span class="detail">Enfant féminin</span>
+      </button>
+      <button class="mq-btn" data-mq="garcon" onclick="selMq(this)">
+        <span class="icon">👦</span>
+        <span class="name">Petit garçon</span>
+        <span class="detail">Enfant masculin</span>
+      </button>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="card-title">🎨 Corpulence</div>
+    <div class="pills" id="corpPills">
+      <button class="pill" data-corp="mince" onclick="selPill('corp',this)">Mince</button>
+      <button class="pill active" data-corp="normal" onclick="selPill('corp',this)">Normal</button>
+      <button class="pill" data-corp="athletique" onclick="selPill('corp',this)">Athlétique</button>
+      <button class="pill" data-corp="large" onclick="selPill('corp',this)">Large</button>
+      <button class="pill" data-corp="ronde" onclick="selPill('corp',this)">Ronde</button>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="card-title">🖤 Couleur mannequin</div>
+    <div class="pills" id="colorPills">
+      <button class="color-pill active" data-col="beige" onclick="selColor(this)">
+        <span class="dot" style="background:#d4a574"></span> Beige
+      </button>
+      <button class="color-pill" data-col="blanc" onclick="selColor(this)">
+        <span class="dot" style="background:#f5f5f5;border-color:#ccc"></span> Blanc
+      </button>
+      <button class="color-pill" data-col="noir" onclick="selColor(this)">
+        <span class="dot" style="background:#1a1a1a"></span> Noir laqué
+      </button>
+    </div>
+  </div>
+
+  <!-- ÉTAPE 3 : OPTIONS -->
+  <div class="card">
+    <div class="card-title">⚙️ Étape 3 — Options annonce</div>
+
+    <div class="flabel" style="margin-bottom:6px">Langue</div>
+    <div class="pills" id="langPills" style="margin-bottom:12px">
+      <button class="pill active" data-lang="fr" onclick="selPill('lang',this)">🇫🇷 Français</button>
+      <button class="pill" data-lang="en" onclick="selPill('lang',this)">🇬🇧 English</button>
+      <button class="pill" data-lang="nl" onclick="selPill('lang',this)">🇳🇱 Nederlands</button>
+    </div>
+
+    <div class="flabel" style="margin-bottom:6px">État du vêtement</div>
+    <div class="pills" id="etatPills">
+      <button class="pill active" data-etat="Neuf avec étiquette" onclick="selPill('etat',this)">Neuf 🏷️</button>
+      <button class="pill" data-etat="Très bon état" onclick="selPill('etat',this)">Très bon</button>
+      <button class="pill" data-etat="Bon état" onclick="selPill('etat',this)">Bon état</button>
+      <button class="pill" data-etat="Satisfaisant" onclick="selPill('etat',this)">Satisfaisant</button>
+    </div>
+  </div>
+
+  <!-- COMPTEUR DAILY -->
+  <div class="card">
+    <div class="card-title">📊 Utilisation du jour</div>
+    <div class="counter-row">
+      <span>Photos générées aujourd'hui</span>
+      <strong id="dayCount">0 / 100</strong>
+    </div>
+    <div style="height:4px;background:#0d0d1a;border-radius:2px;margin-top:8px;overflow:hidden">
+      <div id="dayBar" style="height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));width:0%;border-radius:2px;transition:width .5s"></div>
+    </div>
+  </div>
+
+  <!-- BOUTON GÉNÉRER -->
+  <button class="btn-main" id="genBtn" onclick="generate()">
+    ✨ Générer sur mannequin + Annonce Vinted
+  </button>
+</div>
+
+<!-- ══════════════ PAGE RÉSULTAT ══════════════ -->
+<div id="page-result" class="page">
+  <header>
+    <button onclick="showPage('create')" style="background:none;border:none;color:var(--text);font-size:20px;cursor:pointer;padding:2px 6px">←</button>
+    <div>
+      <h1>Résultat</h1>
+      <p>Ton annonce Vinted</p>
+    </div>
+  </header>
+
+  <!-- PHOTO GÉNÉRÉE -->
+  <div class="card">
+    <div class="card-title">📸 Photo sur mannequin</div>
+    <div class="result-img-wrap" id="resultImgWrap">
+      <div class="placeholder">
+        <span class="icon">🗿</span>
+        <span>Photo générée ici</span>
+      </div>
+    </div>
+    <button class="btn-outline" id="savePhotoBtn" onclick="savePhoto()" style="display:none">
+      💾 Enregistrer la photo
+    </button>
+  </div>
+
+  <!-- TEXTE ANNONCE -->
+  <div class="card">
+    <div class="card-title">📝 Titre</div>
+    <div class="copy-row">
+      <textarea id="rTitle" rows="2"></textarea>
+      <button class="copy-btn" onclick="cp('rTitle',this)">📋</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📄 Description</div>
+    <div class="copy-row">
+      <textarea id="rDesc" rows="6"></textarea>
+      <button class="copy-btn" onclick="cp('rDesc',this)">📋</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🏷️ Mots-clés</div>
+    <div class="copy-row">
+      <textarea id="rTags" rows="2"></textarea>
+      <button class="copy-btn" onclick="cp('rTags',this)">📋</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;gap:10px;font-size:.8rem">
+      <div style="flex:1">
+        <div class="flabel">Marque</div>
+        <div id="rBrand" style="color:var(--accent2);font-weight:600">—</div>
+      </div>
+      <div style="flex:1">
+        <div class="flabel">État</div>
+        <div id="rCond" style="color:var(--accent2);font-weight:600">—</div>
+      </div>
+      <div style="flex:1">
+        <div class="flabel">Couleur</div>
+        <div id="rColor" style="color:var(--accent2);font-weight:600">—</div>
+      </div>
+    </div>
+  </div>
+
+  <button class="btn-outline" style="margin:0 14px;width:calc(100% - 28px)" onclick="saveHistory()">💾 Sauvegarder dans l'historique</button>
+  <button class="btn-green" onclick="window.open('https://www.vinted.fr/sell','_blank')">🏷️ Ouvrir Vinted</button>
+  <div style="height:10px"></div>
+</div>
+
+<!-- ══════════════ PAGE HISTORIQUE ══════════════ -->
+<div id="page-history" class="page">
+  <header>
+    <div class="logo-box">📚</div>
+    <div><h1>Historique</h1><p>Annonces sauvegardées</p></div>
+  </header>
+  <div style="margin:14px" id="histContainer">
+    <div class="empty"><div class="eicon">📭</div><p>Aucune annonce encore.<br>Génère ta première !</p></div>
+  </div>
+</div>
+
+<!-- ══════════════ PAGE RÉGLAGES ══════════════ -->
+<div id="page-settings" class="page">
+  <header>
+    <div class="logo-box">⚙️</div>
+    <div><h1>Réglages</h1><p>Configuration des clés API</p></div>
+  </header>
+
+  <div class="card">
+    <div class="card-title">🔑 Clés API (gratuites)</div>
+
+    <div class="settings-block">
+      <label>ModelsLab API Key — <a href="https://modelslab.com" target="_blank" style="color:var(--accent2)">modelslab.com</a></label>
+      <div class="row">
+        <input type="password" id="mlKey" class="flex1" placeholder="Clé ModelsLab..."/>
+        <button class="icon-btn" onclick="toggleVis('mlKey')">👁️</button>
+      </div>
+      <p style="font-size:.68rem;color:var(--muted);margin-top:5px">Gratuit : 100 photos/jour · Compte sans carte bancaire</p>
+    </div>
+
+    <div class="settings-block">
+      <label>Google Gemini API Key — <a href="https://aistudio.google.com" target="_blank" style="color:var(--accent2)">aistudio.google.com</a></label>
+      <div class="row">
+        <input type="password" id="gmKey" class="flex1" placeholder="Clé Gemini..."/>
+        <button class="icon-btn" onclick="toggleVis('gmKey')">👁️</button>
+      </div>
+      <p style="font-size:.68rem;color:var(--muted);margin-top:5px">Gratuit : 1500 requêtes/jour · Compte Google suffit</p>
+    </div>
+
+    <button class="btn-main" style="margin:0;width:100%" onclick="saveKeys()">💾 Sauvegarder les clés</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📱 Comment installer l'app</div>
+    <ol style="font-size:.8rem;color:var(--muted);line-height:2;padding-left:18px">
+      <li>Ouvre l'app dans <strong style="color:var(--text)">Chrome</strong></li>
+      <li>Menu ⋮ → <strong style="color:var(--text)">Ajouter à l'écran d'accueil</strong></li>
+      <li>L'app s'installe comme une vraie appli !</li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <div class="card-title">ℹ️ À propos</div>
+    <p style="font-size:.78rem;color:var(--muted);line-height:1.7">
+      <strong style="color:var(--text)">PhotoFit AI</strong> v1.0 — Usage privé uniquement<br>
+      Photos mannequin : <strong style="color:var(--text)">ModelsLab</strong> (100/jour gratuit)<br>
+      Textes Vinted : <strong style="color:var(--text)">Google Gemini</strong> (1500/jour gratuit)<br>
+      Hébergement : <strong style="color:var(--text)">GitHub Pages</strong> (gratuit)<br>
+      Tes données restent sur ton téléphone uniquement.
+    </p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🗑️ Données</div>
+    <button class="danger-btn" onclick="clearAll()">Vider l'historique et réinitialiser</button>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav>
+  <button class="active" onclick="showPage('create',this)" id="nav-create">
+    <span class="ni">✨</span>Créer
+  </button>
+  <button onclick="showPage('result',this)" id="nav-result">
+    <span class="ni">🖼️</span>Résultat
+  </button>
+  <button onclick="showPage('history',this);renderHistory()" id="nav-history">
+    <span class="ni">📚</span>Historique
+  </button>
+  <button onclick="showPage('settings',this)" id="nav-settings">
+    <span class="ni">⚙️</span>Réglages
+  </button>
+</nav>
+
+<!-- LOADING -->
+<div class="loading-overlay" id="loader">
+  <div class="spinner"></div>
+  <div class="loading-title" id="loaderTitle">Génération en cours...</div>
+  <div class="steps">
+    <div class="step active" id="step1"><span class="dot"></span> Analyse du vêtement (IA)</div>
+    <div class="step" id="step2"><span class="dot"></span> Habillage du mannequin</div>
+    <div class="step" id="step3"><span class="dot"></span> Rédaction de l'annonce</div>
+    <div class="step" id="step4"><span class="dot"></span> Finalisation</div>
+  </div>
+  <div class="loading-sub" id="loaderSub">Patiente quelques secondes...</div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════ STATE ══════
+const photos = [null,null,null];
+let curSlot = 0;
+let selMannequin = 'femme';
+let selCorpulence = 'normal';
+let selCouleur = 'beige';
+let selLang = 'fr';
+let selEtat = 'Neuf avec étiquette';
+let lastResult = null;
+
+// ══════ INIT ══════
+window.addEventListener('load', () => {
+  loadKeys();
+  updateCounter();
+  if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+});
+
+// ══════ NAVIGATION ══════
+function showPage(name, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  const navBtn = btn || document.getElementById('nav-'+name);
+  if(navBtn) navBtn.classList.add('active');
+}
+
+// ══════ PHOTOS ══════
+function openSlot(i) { curSlot=i; document.getElementById('fileIn').click(); }
+function handleFile(e) {
+  const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    photos[curSlot]=ev.target.result;
+    const s=document.getElementById('s'+curSlot);
+    s.classList.add('filled');
+    let img=s.querySelector('img');
+    if(!img){img=document.createElement('img');s.prepend(img);}
+    img.src=ev.target.result;
+  };
+  r.readAsDataURL(f);
+  e.target.value='';
+}
+function delSlot(e,i) {
+  e.stopPropagation();
+  photos[i]=null;
+  const s=document.getElementById('s'+i);
+  s.classList.remove('filled');
+  const img=s.querySelector('img');
+  if(img) img.remove();
+}
+
+// ══════ SELECTORS ══════
+function selMq(btn) {
+  document.querySelectorAll('.mq-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  selMannequin=btn.dataset.mq;
+}
+function selPill(group, btn) {
+  const map={corp:'corpPills',lang:'langPills',etat:'etatPills'};
+  document.querySelectorAll('#'+map[group]+' .pill').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  if(group==='corp') selCorpulence=btn.dataset.corp;
+  if(group==='lang') selLang=btn.dataset.lang;
+  if(group==='etat') selEtat=btn.dataset.etat;
+}
+function selColor(btn) {
+  document.querySelectorAll('.color-pill').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  selCouleur=btn.dataset.col;
+}
+
+// ══════ KEYS ══════
+function saveKeys() {
+  const ml=document.getElementById('mlKey').value.trim();
+  const gm=document.getElementById('gmKey').value.trim();
+  if(ml) localStorage.setItem('pf_ml',ml);
+  if(gm) localStorage.setItem('pf_gm',gm);
+  toast('✅ Clés sauvegardées !');
+}
+function loadKeys() {
+  const ml=localStorage.getItem('pf_ml')||'';
+  const gm=localStorage.getItem('pf_gm')||'';
+  document.getElementById('mlKey').value=ml;
+  document.getElementById('gmKey').value=gm;
+}
+function toggleVis(id) {
+  const el=document.getElementById(id);
+  el.type=el.type==='password'?'text':'password';
+}
+
+// ══════ DAILY COUNTER ══════
+function updateCounter() {
+  const today=new Date().toDateString();
+  const data=JSON.parse(localStorage.getItem('pf_counter')||'{"date":"","count":0}');
+  if(data.date!==today){data.date=today;data.count=0;localStorage.setItem('pf_counter',JSON.stringify(data));}
+  const count=data.count;
+  document.getElementById('dayCount').textContent=count+' / 100';
+  document.getElementById('dayBar').style.width=Math.min(count,100)+'%';
+  return count;
+}
+function incCounter() {
+  const today=new Date().toDateString();
+  let data=JSON.parse(localStorage.getItem('pf_counter')||'{"date":"","count":0}');
+  if(data.date!==today){data.date=today;data.count=0;}
+  data.count++;
+  localStorage.setItem('pf_counter',JSON.stringify(data));
+  updateCounter();
+}
+
+// ══════ LOADING ══════
+function setLoader(show,title,sub,step) {
+  document.getElementById('loader').classList.toggle('show',show);
+  if(title) document.getElementById('loaderTitle').textContent=title;
+  if(sub) document.getElementById('loaderSub').textContent=sub;
+  if(step) {
+    ['step1','step2','step3','step4'].forEach((s,i)=>{
+      const el=document.getElementById(s);
+      el.className='step'+(i+1<step?' done':i+1===step?' active':'');
+    });
+  }
+  document.getElementById('genBtn').disabled=show;
+}
+
+// ══════ GENERATE ══════
+async function generate() {
+  const mlKey=localStorage.getItem('pf_ml');
+  const gmKey=localStorage.getItem('pf_gm');
+  if(!mlKey||!gmKey) { toast('❌ Configure tes clés API dans Réglages !'); showPage('settings'); return; }
+
+  const mainPhoto=photos[0];
+  if(!mainPhoto) { toast('❌ Ajoute au moins 1 photo !'); return; }
+
+  const count=updateCounter();
+  if(count>=100) { toast('⛔ Limite 100 photos/jour atteinte. Reviens demain !'); return; }
+
+  setLoader(true,'Analyse du vêtement...','L\'IA identifie la marque et les détails...',1);
+
+  try {
+    // ── STEP 1: Gemini analyse photo ──
+    const b64=mainPhoto.split(',')[1];
+    const mime=mainPhoto.split(';')[0].split(':')[1];
+
+    const geminiResp = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${gmKey}`,
+      {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          contents:[{parts:[
+            {inline_data:{mime_type:mime,data:b64}},
+            {text:buildAnalysisPrompt()}
+          ]}],
+          generationConfig:{responseMimeType:'application/json'}
+        })
+      }
+    );
+
+    if(!geminiResp.ok) {
+      const err=await geminiResp.json();
+      throw new Error('Gemini: '+(err.error?.message||'Erreur clé API'));
+    }
+
+    const geminiData=await geminiResp.json();
+    const rawText=geminiData.candidates?.[0]?.content?.parts?.[0]?.text||'{}';
+    let analysis;
+    try { analysis=JSON.parse(rawText.replace(/```json|```/g,'').trim()); }
+    catch { analysis={titre:'Vêtement',description:'Beau vêtement en bon état.',tags:'mode,vêtement',marque:'Inconnu',couleur:'Noir',etat:selEtat}; }
+
+    // ── STEP 2: ModelsLab virtual try-on ──
+    setLoader(true,'Habillage du mannequin...','Placement du vêtement sur le mannequin...',2);
+
+    const mannequinPrompt = buildMannequinPrompt();
+    const imgB64 = mainPhoto.split(',')[1];
+
+    const mlBody = {
+      key: mlKey,
+      prompt: mannequinPrompt,
+      negative_prompt: "blurry, deformed, ugly, bad anatomy, extra limbs, bad clothes, wrinkled mess, AI artifacts, watermark",
+      init_image: mainPhoto, // data URL accepted by ModelsLab
+      width: "512",
+      height: "768",
+      samples: "1",
+      num_inference_steps: "21",
+      safety_checker: "no",
+      enhance_prompt: "yes",
+      guidance_scale: 7.5,
+      seed: null,
+      webhook: null,
+      track_id: null
+    };
+
+    // Use ModelsLab image2image endpoint with fashion prompt
+    const mlResp = await fetch('https://modelslab.com/api/v6/realtime/img2img', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(mlBody)
+    });
+
+    let generatedImageUrl = null;
+
+    if(mlResp.ok) {
+      const mlData=await mlResp.json();
+      if(mlData.status==='success' && mlData.output?.[0]) {
+        generatedImageUrl=mlData.output[0];
+      } else if(mlData.status==='processing' && mlData.fetch_result) {
+        // Poll for result
+        setLoader(true,'Habillage en cours...','Le mannequin s\'habille, patience...',2);
+        generatedImageUrl=await pollResult(mlData.fetch_result, mlKey, 30);
+      }
+    }
+
+    // ── STEP 3: Build listing text ──
+    setLoader(true,'Rédaction de l\'annonce...','Création du titre et de la description...',3);
+
+    // Listing text already from step 1 analysis, no extra call needed
+    setLoader(true,'Finalisation...','Tout est prêt !',4);
+    await sleep(600);
+
+    incCounter();
+    setLoader(false);
+
+    // ── DISPLAY RESULT ──
+    displayResult(analysis, generatedImageUrl || mainPhoto);
+
+  } catch(err) {
+    setLoader(false);
+    toast('❌ '+err.message);
+    console.error(err);
+  }
+}
+
+// ══════ PROMPT BUILDERS ══════
+function buildAnalysisPrompt() {
+  const langMap={fr:'Réponds en français.',en:'Reply in English.',nl:'Antwoord in het Nederlands.'};
+  return `Tu es expert en vente de vêtements sur Vinted. Analyse cette photo de vêtement.
+${langMap[selLang]||langMap.fr}
+État déclaré : ${selEtat}
+
+Réponds UNIQUEMENT en JSON valide sans markdown :
+{
+  "titre": "Titre accrocheur 60 caractères max avec marque taille état",
+  "description": "Description 4-6 phrases : marque, matière estimée, coupe, couleur, état, points forts pour attirer acheteur",
+  "tags": "5 mots-clés séparés virgule optimisés Vinted",
+  "marque": "marque détectée ou Générique",
+  "couleur": "couleur principale",
+  "etat": "${selEtat}"
+}`;
+}
+
+function buildMannequinPrompt() {
+  const mqMap={
+    femme:'a young adult woman fashion model',
+    homme:'a young adult man fashion model',
+    fille:'a young girl child model age 6-10',
+    garcon:'a young boy child model age 6-10'
+  };
+  const corpMap={
+    mince:'slim thin body type',
+    normal:'average normal body type',
+    athletique:'athletic fit muscular body type',
+    large:'plus size large body type',
+    ronde:'curvy full figure body type'
+  };
+  const colMap={
+    beige:'beige skin tone',
+    blanc:'fair light skin tone',
+    noir:'dark brown skin tone'
+  };
+  const person=mqMap[selMannequin]||mqMap.femme;
+  const corp=corpMap[selCorpulence]||corpMap.normal;
+  const col=colMap[selCouleur]||colMap.beige;
+  return `Professional fashion product photo: ${person}, ${corp}, ${col}, wearing the exact same clothing item from the reference image, standing straight front view pose, pure white studio background, soft natural diffused lighting, clean professional e-commerce photo, high quality, photorealistic`;
+}
+
+// ══════ POLL RESULT ══════
+async function pollResult(fetchUrl, key, maxTries) {
+  for(let i=0;i<maxTries;i++) {
+    await sleep(2000);
+    try {
+      const r=await fetch(fetchUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key})});
+      if(r.ok) {
+        const d=await r.json();
+        if(d.status==='success'&&d.output?.[0]) return d.output[0];
+      }
+    } catch(e) {}
+  }
+  return null;
+}
+
+// ══════ DISPLAY RESULT ══════
+function displayResult(analysis, imageUrl) {
+  document.getElementById('rTitle').value=analysis.titre||'';
+  document.getElementById('rDesc').value=analysis.description||'';
+  document.getElementById('rTags').value=analysis.tags||'';
+  document.getElementById('rBrand').textContent=analysis.marque||'—';
+  document.getElementById('rCond').textContent=analysis.etat||selEtat;
+  document.getElementById('rColor').textContent=analysis.couleur||'—';
+
+  const wrap=document.getElementById('resultImgWrap');
+  wrap.innerHTML='';
+  const img=document.createElement('img');
+  img.src=imageUrl;
+  img.alt='Photo générée';
+  wrap.appendChild(img);
+  document.getElementById('savePhotoBtn').style.display='block';
+
+  lastResult={analysis,imageUrl,photo:photos[0]};
+  showPage('result');
+}
+
+// ══════ SAVE PHOTO ══════
+function savePhoto() {
+  if(!lastResult) return;
+  const a=document.createElement('a');
+  a.href=lastResult.imageUrl;
+  a.download='photofit_'+Date.now()+'.jpg';
+  a.click();
+  toast('💾 Photo téléchargée !');
+}
+
+// ══════ COPY ══════
+function cp(id,btn) {
+  const t=document.getElementById(id).value;
+  navigator.clipboard.writeText(t).then(()=>{
+    btn.classList.add('ok');btn.textContent='✅';
+    setTimeout(()=>{btn.classList.remove('ok');btn.textContent='📋';},1500);
+    toast('📋 Copié !');
+  });
+}
+
+// ══════ HISTORY ══════
+function saveHistory() {
+  if(!lastResult) return;
+  const h=JSON.parse(localStorage.getItem('pf_hist')||'[]');
+  h.unshift({
+    id:Date.now(),
+    titre:lastResult.analysis.titre,
+    description:lastResult.analysis.description,
+    tags:lastResult.analysis.tags,
+    marque:lastResult.analysis.marque,
+    etat:lastResult.analysis.etat,
+    photo:lastResult.photo,
+    imageUrl:lastResult.imageUrl,
+    date:new Date().toLocaleDateString('fr-FR')
+  });
+  if(h.length>60) h.pop();
+  localStorage.setItem('pf_hist',JSON.stringify(h));
+  toast('💾 Sauvegardé !');
+}
+
+function renderHistory() {
+  const h=JSON.parse(localStorage.getItem('pf_hist')||'[]');
+  const c=document.getElementById('histContainer');
+  if(!h.length){
+    c.innerHTML='<div class="empty"><div class="eicon">📭</div><p>Aucune annonce encore.<br>Génère ta première !</p></div>';
+    return;
+  }
+  c.innerHTML='<div class="hist-list">'+h.map(item=>`
+    <div class="hist-item">
+      <img src="${item.imageUrl||item.photo}" alt=""/>
+      <div class="hist-info">
+        <div class="hist-title">${item.titre||'Sans titre'}</div>
+        <div class="hist-meta">${item.marque||''} · ${item.date}</div>
+        <div class="hist-actions">
+          <button class="hist-btn" onclick="loadHistItem(${item.id})">↩️ Recharger</button>
+          <button class="hist-btn danger" onclick="delHistItem(${item.id})">🗑️</button>
+        </div>
+      </div>
+    </div>`).join('')+'</div>';
+}
+
+function loadHistItem(id) {
+  const h=JSON.parse(localStorage.getItem('pf_hist')||'[]');
+  const item=h.find(i=>i.id===id);
+  if(!item) return;
+  lastResult={analysis:item,imageUrl:item.imageUrl||item.photo,photo:item.photo};
+  displayResult(item,item.imageUrl||item.photo);
+}
+
+function delHistItem(id) {
+  let h=JSON.parse(localStorage.getItem('pf_hist')||'[]');
+  h=h.filter(i=>i.id!==id);
+  localStorage.setItem('pf_hist',JSON.stringify(h));
+  renderHistory();
+}
+
+function clearAll() {
+  if(confirm('Vider tout l\'historique ?')) {
+    localStorage.removeItem('pf_hist');
+    localStorage.removeItem('pf_counter');
+    renderHistory();
+    updateCounter();
+    toast('🗑️ Réinitialisé');
+  }
+}
+
+// ══════ UTILS ══════
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+</script>
+</body>
+</html>
